@@ -197,7 +197,8 @@ int muestraUnClienteXDni (char nombreArchivo[], char dni, stCliente cliente)
     int id = -1; //Por si el dni a buscar no esta en cliente.
     FILE* archivo = fopen(nombreArchivo, "rb");
 
-    if(archivo){
+    if(archivo)
+    {
         while (fread(&cliente, sizeof(stCliente), 1, archivo) > 0)
         {
             if (strcmp(dni,cliente.dni) == 0)
@@ -210,6 +211,10 @@ int muestraUnClienteXDni (char nombreArchivo[], char dni, stCliente cliente)
     }
 
     return id;
+}
+void muestraUnCliente(stCliente cliente)
+{
+
 }
 
 void cambiarEstadoCuenta(char nombreArchivo[], int idCuenta, int estado)
@@ -234,23 +239,66 @@ void cambiarEstadoCuenta(char nombreArchivo[], int idCuenta, int estado)
     }
 }
 
-void modificarCuenta(char nombreArchivo[], int idCuenta, stCuenta nuevacuenta)
+void cambiarTipoCuenta(char nombreArchivo[], int idCuenta, int tipoCuenta)
 {
+    stCuenta cuenta;
     FILE* archivo = fopen(nombreArchivo, "r+b");
 
-    if(archivo){
-
-
-
+    if(archivo)
+    {
+        while (fread(&cuenta, sizeof(stCuenta), 1, archivo) > 0)
+        {
+            if (cuenta.id == idCuenta)
+            {
+                cuenta.tipoCuenta = tipoCuenta;
+                fseek(archivo, -1*sizeof(stCuenta), 1);
+                fwrite(&cuenta, sizeof(stCuenta), 1, archivo);
+            }
+        }
         fclose(archivo);
     }
 }
-
-
-void muestraUnCliente(stCliente cliente)
+int tipoCuenta()
 {
+    int tipoCta;
 
+    printf("Seleccione el tipo de cuenta por el que quiere cambiar: \n");
+    printf("1. Caja de ahorro en pesos. \n");
+    printf("2. Caja de ahorro en dolares. \n");
+    printf("3. Cuenta corriente en pesos. \n");
+    scanf("%d", &tipoCta);
+
+    while(tipoCta > 3 || tipoCta < 1)
+    {
+        printf("Seleccione un tipo de cuenta valido: \n");
+        printf("1. Caja de ahorro en pesos. \n");
+        printf("2. Caja de ahorro en dolares. \n");
+        printf("3. Cuenta corriente en pesos. \n");
+        scanf("%d", &tipoCta);
+    }
+
+    return tipoCta;
 }
+
+void modificarCuenta(char nombreArchivo[], int idCuenta, stCuenta nuevacuenta)
+{
+    stCuenta cuenta;
+    FILE* archivo = fopen(nombreArchivo, "r+b");
+
+    if(archivo){
+            while (fread(&cuenta, sizeof(cuenta), 1, archivo) > 0)
+            {
+                if (cuenta.id == idCuenta)
+                {
+                    fseek(archivo, -1*sizeof(stCuenta), 1);
+                    fwrite(&nuevacuenta, sizeof(stCuenta), 1, archivo);
+                    break;
+                }
+            }
+            fclose(archivo);
+    }
+}
+
 void cambiarEstadoCliente(char nombreArchivo[], int idCliente, int estado)
 {
     stCliente cliente;
@@ -265,6 +313,24 @@ void cambiarEstadoCliente(char nombreArchivo[], int idCliente, int estado)
                 cliente.id = estado;
                 fseek(archivo, -1*sizeof(stCliente), 1);
                 fwrite(&cliente, sizeof(stCliente), 1, archivo);
+            }
+        }
+        fclose(archivo);
+    }
+}
+
+void muestraPorIdCuenta(char nombreArchivo[], int idCuenta)
+{
+    stCuenta cuenta;
+    FILE *archivo = fopen(nombreArchivo, "rb");
+
+    if (archivo)
+    {
+        while (fread(&cuenta, sizeof(stCuenta), 1, archivo) > 0)
+        {
+            if (cuenta.id == idCuenta)
+            {
+                muestraUnaCuenta(cuenta);
             }
         }
         fclose(archivo);
