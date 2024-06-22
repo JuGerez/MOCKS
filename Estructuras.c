@@ -15,40 +15,38 @@
 stCuenta cargaUnaCuenta (char nombreArchivo[])
 {
     stCuenta Cuenta;
-    printf("Conoce el Id de Cliente o lo quiere buscar por n%c de Dni? \n", 167);
-    printf("1. Lo conozco. \n");
-    printf("2. Lo tengo que buscar. \n");
-    scanf("%d", &Cuenta.idCliente);
+    char dni;
+    printf("Ingrese el Dni del Cliente que abrir la cuenta: \n");
+    fflush(stdin);
+    gets(dni);
 
-    while(Cuenta.idCliente > 2 || Cuenta.idCliente < 1)
+    int idCliente = traducirDniaCliente(nombreArchivo, dni);
+
+    int flag = 1;
+    while(flag)
     {
-        printf("Seleccione una opcion valida: \n");
-        printf("1. Conozco el Id del Cliente. \n");
-        printf("2. Lo tengo que buscar. \n");
-        scanf("%d", &Cuenta.idCliente);
-    }
-
-    while(Cuenta.idCliente == 2){
         stCliente Cliente;
-        char dni;
-        printf("Ingrese el Dni del Cliente que quiere buscar: \n");
-        fflush(stdin);
-        gets(&dni);
-        while( muestraUnClienteXDni(nombreArchivo, dni, Cliente) < 0){
-            printf("Ingrese el Dni del Cliente que quiere buscar: \n");
-            fflush(stdin);
-            gets(&dni);
+
+        while( idCliente == -1)
+        {
+                printf("El nro de Dni no existe. \n Ingrese un Dni de un Cliente que exista: \n");
+                fflush(stdin);
+                gets(dni);
+        }
+        if (idCliente < -1)
+        {
+            muestraUnClienteXDni(nombreArchivo, dni, Cliente);
+            printf("Ingrese el Id de Cliente correspondiente: \n");
+            scanf("%d", Cuenta.idCliente);
+            flag = 0;
+        } else
+        {
+            Cuenta.idCliente = idCliente;
+            flag = 0;
         }
     }
 
-    while (Cuenta.idCliente >= cuentaRegistroGral(nombreArchivo, sizeof(stCliente)))
-    {
-        printf("Id de Cliente no existente.\n");
-        printf("Ingrese un Id de Cliente: \n");
-        scanf("%d", &Cuenta.idCliente);
-    }
-
-     printf("Seleccione el tipo de cuenta que quiere abrir: \n");
+    printf("Seleccione el tipo de cuenta que quiere abrir: \n");
     printf("1. Caja de ahorro en pesos. \n");
     printf("2. Caja de ahorro en dolares. \n");
     printf("3. Cuenta corriente en pesos. \n");
@@ -63,16 +61,9 @@ stCuenta cargaUnaCuenta (char nombreArchivo[])
         scanf("%d", &Cuenta.tipoCuenta);
     }
 
-    int nroCuenta;
-    printf("Cree un n%c de Cuenta: \n", 167);
-    scanf("%d", &nroCuenta);
 
-    while (buscaIdCuenta(nombreArchivo, nroCuenta) == 1)//1 existe y 0 no.
-    {
-        printf("N%c de Cuenta existente.\n", 167);
-        printf("Por favor cree otro n%c de Cuenta: \n", 167);
-        scanf("%d", &nroCuenta);
-    }
+    int cantidadPorTipoCuenta = contarCuentasDelMismoTipo(nombreArchivo, Cuenta.idCliente, Cuenta.tipoCuenta);
+    int nroCuenta = generarNumeroDeCuenta(dni, Cuenta.tipoCuenta, cantidadPorTipoCuenta);
 
     Cuenta.nroCuenta = nroCuenta;
 
@@ -258,6 +249,25 @@ void cambiarTipoCuenta(char nombreArchivo[], int idCuenta, int tipoCuenta)
         fclose(archivo);
     }
 }
+//void cambiarCliente(char nombreArchivo[], int idCliente, stCliente clienteNuevo)
+//{
+//    stCliente cliente = clienteNuevo;
+//    FILE* archivo = fopen(nombreArchivo, "r+b");
+//
+//    if(archivo)
+//    {
+//        while (fread(&cliente, sizeof(stCliente), 1, archivo) > 0)
+//        {
+//            if (cliente.id == idCliente)
+//            {
+//                cuenta.tipoCuenta = tipoCuenta;
+//                fseek(archivo, -1*sizeof(stCuenta), 1);
+//                fwrite(&cuenta, sizeof(stCuenta), 1, archivo);
+//            }
+//        }
+//        fclose(archivo);
+//    }
+//}
 int tipoCuenta()
 {
     int tipoCta;
@@ -335,4 +345,37 @@ void muestraPorIdCuenta(char nombreArchivo[], int idCuenta)
         }
         fclose(archivo);
     }
+}
+int contarCuentasDelMismoTipo(char nombreArchivo[], int idCliente, int tipoCuenta)
+{
+    stCuenta cuenta;
+    int contador = 0;
+    FILE* archivo = fopen(nombreArchivo, "rb");
+
+    if(archivo)
+    {
+        fseek(archivo, 0, SEEK_SET); // Ir al inicio del archivo
+        while (fread(&cuenta, sizeof(stCuenta), 1, archivo) > 0)
+            {
+                if (cuenta.idCliente == idCliente && cuenta.tipoCuenta == tipoCuenta)
+                {
+                    contador++;
+                }
+            }
+        fclose(archivo);
+    }
+
+    return contador;
+}
+
+// Función para generar un número de cuenta automáticamente
+int generarNumeroDeCuenta(char dni, int tipoCuenta, int cantidadCuentas)
+{
+
+    int numeroSucursal = rand() % 900 + 100; // Genera un número de 3 dígitos (100-999)
+
+    char numeroDeCuenta[14];
+    sprintf(numeroDeCuenta, "%d%s%02d%03d", tipoCuenta, dni, cantidadCuentas, numeroSucursal);
+
+    return atoi(numeroDeCuenta); // Convierte la cadena a un entero
 }
